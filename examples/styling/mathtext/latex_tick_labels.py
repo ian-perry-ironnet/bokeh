@@ -6,7 +6,7 @@ x = arange(1, 4.5, 0.25)
 y = 1 / x
 
 plot = figure(height=200)
-plot.circle(x, y, fill_color="blue", size=5)
+plot.scatter(x, y, fill_color="blue", size=5)
 plot.line(x, y, color="darkgrey")
 
 plot.xaxis.axis_label = "Resistance"
