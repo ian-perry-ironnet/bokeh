@@ -104,7 +104,7 @@ def test_gridplot_merge_toolbar_properties__issue_13265() -> None:
 def test_gridplot_None() -> None:
     def p():
         p = figure()
-        p.circle([1, 2, 3], [4, 5, 6])
+        p.scatter([1, 2, 3], [4, 5, 6])
         return p
 
     p0, p1, p2, p3 = p(), p(), p(), p()
