@@ -47,6 +47,11 @@ export abstract class RendererView extends View implements visuals.Renderable {
       return this._coordinates = this._initialize_coordinates()
   }
 
+  private _custom_coordinates: CoordinateTransform | null = null
+  set coordinates(custom_coordinates: CoordinateTransform | null) {
+    this._custom_coordinates = custom_coordinates
+  }
+
   override initialize(): void {
     super.initialize()
     this.visuals = new visuals.Visuals(this)
@@ -68,6 +73,9 @@ export abstract class RendererView extends View implements visuals.Renderable {
   }
 
   protected _initialize_coordinates(): CoordinateTransform {
+    if (this._custom_coordinates != null) {
+      return this._custom_coordinates
+    }
     const {coordinates} = this.model
     const {frame} = this.plot_view
     if (coordinates != null) {
