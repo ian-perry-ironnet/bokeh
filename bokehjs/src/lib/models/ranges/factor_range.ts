@@ -295,7 +295,8 @@ export class FactorRange extends Range {
 
     this.setv({start, end, levels}, {silent})
 
-    if (this.bounds == "auto")
-      this.setv({bounds: [start, end]}, {silent: true})
+    if (this.bounds == "auto") {
+      this._computed_bounds = [start, end]
+    }
   }
 }
