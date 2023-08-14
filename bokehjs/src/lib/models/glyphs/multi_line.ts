@@ -1,6 +1,6 @@
 import type {SpatialIndex} from "core/util/spatial"
 import {inplace} from "core/util/projections"
-import type {PointGeometry, SpanGeometry} from "core/geometry"
+import type {PointGeometry, SpanGeometry, RectGeometry} from "core/geometry"
 import {LineVector} from "core/property_mixins"
 import type * as visuals from "core/visuals"
 import type {Rect, RaggedArray, FloatArray, ScreenArray} from "core/types"
@@ -106,6 +106,62 @@ export class MultiLineView extends GlyphView {
       indices: [...hits.keys()],
       multiline_indices: to_object(hits), // TODO: remove to_object()
     })
+  }
+
+  protected override _hit_rect(geometry: RectGeometry): Selection {
+    const {sx0, sx1, sy0, sy1} = geometry
+    
+    console.log(sx0, sx1, sy0, sy1)
+
+    const hits: Map<number, number[]> = new Map()
+    for (let i = 0, end = this.sxs.length; i < end; i++) {
+      const sxsi = this.sxs.get(i)
+      const sysi = this.sys.get(i)
+
+      let points: number[] | null = null
+      for (let j = 0, endj = sxsi.length - 1; j < endj; j++) {
+        const p0 = {x: sxsi[j],   y: sysi[j]}
+        const p1 = {x: sxsi[j+1], y: sysi[j+1]}
+        // check if any point along line of p0 and p1 is in rect
+        if (this.lineRect(p0.x, p0.y, p1.x, p1.y, sx0, sy0, sx1, sy1))
+          points = [j]
+      }
+      if (points != null) {
+        hits.set(i, points)
+      }
+    }
+
+    return new Selection({
+      indices: [...hits.keys()],
+      multiline_indices: to_object(hits), // TODO: remove to_object()
+    })
+  }
+
+  lineRect(x1: number, y1: number, x2: number, y2: number, rx1: number, ry1: number, rx2: number, ry2: number): boolean {
+    // check if the line has hit any of the rectangle's sides
+    // uses the Line/Line function below
+    const left: boolean   = this.lineLine(x1,y1,x2,y2, rx1,ry1,rx1,ry2)
+    const right: boolean  = this.lineLine(x1,y1,x2,y2, rx2,ry1,rx2,ry2)
+    const top: boolean    = this.lineLine(x1,y1,x2,y2, rx1,ry1,rx2,ry1)
+    const bottom: boolean = this.lineLine(x1,y1,x2,y2, rx1,ry2,rx2,ry2)
+  
+    // if ANY of the above are true, the line
+    // has hit the rectangle
+    if (left || right || top || bottom) {
+      return true;
+    }
+    return false;
+  }
+
+  lineLine(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): boolean {
+    // calculate the direction of the lines
+    const uA: number = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
+    const uB: number = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
+
+    // if uA and uB are between 0-1, lines are colliding
+    if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1)
+      return true
+    return false
   }
 
   protected override _hit_span(geometry: SpanGeometry): Selection {
